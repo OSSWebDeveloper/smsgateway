@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bosh sahifa</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{% url 'home' %}">Musoyev School</a>
+            <ul>
+                <li><a href="{% url 'groups' %}">Guruhlar</a></li>
+                <li><a href="{% url 'students' %}">Talabalar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="welcome">
+            <h1>Xush kelibsiz</h1>
+            <p>Guruhlar va talabalar bilan ishlashni shu yerdan boshlang.</p>
+        </div>
+
+        <div class="quick-links">
+            <a class="quick-link" href="{% url 'groups' %}">
+                <div class="card">
+                    <h3>Guruhlar</h3>
+                    <p>Guruhlarni ko'rish, davomat olish va dars vaqtlarini boshqarish.</p>
+                </div>
+            </a>
+            <a class="quick-link" href="{% url 'students' %}">
+                <div class="card">
+                    <h3>Talabalar</h3>
+                    <p>To'liq talabalar ro'yxati va ularning guruh, ota-ona ma'lumotlari.</p>
+                </div>
+            </a>
+            <a class="quick-link" href="{% url 'sms_config' %}">
+                <div class="card">
+                    <h3>SMS Sozlamalari</h3>
+                    <p>SMS gateway sozlamalarini ko'rish va tahrirlash.</p>
+                </div>
+        </div>
+    </div>
+</body>
+</html>

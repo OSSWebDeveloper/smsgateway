@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guruhlar</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{% url 'home' %}">Musoyev School</a>
+            <ul>
+                <li><a href="{% url 'groups' %}">Guruhlar</a></li>
+                <li><a href="{% url 'students' %}">Talabalar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="toolbar">
+            <h1>Guruhlar</h1>
+            <button><a href="{% url 'group_create' %}">+ Yangi guruh</a></button>
+        </div>
+
+        {% if groups %}
+            <ul class="row-list">
+                {% for group in groups %}
+                    <li>
+                        <a class="row-card" href="{% url 'group_detail' group.id %}">
+                            <span class="row-card-name">{{ group.name }}</span>
+                            <span class="row-card-meta">{{ group.start_time }} – {{ group.ent_time }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-state">Hozircha guruhlar yo'q.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

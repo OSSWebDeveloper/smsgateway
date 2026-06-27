@@ -1,0 +1,42 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirish</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+</head>
+<body>
+<!-- if password is correct link to home page -->
+
+    <div class="auth-screen">
+        <div class="auth-card">
+            <span class="eyebrow">Musoyev School</span>
+            <h2>Tizimga kirish</h2>
+            <form method="post">
+                {% csrf_token %}
+                <label for="username">Foydalanuvchi nomi:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="password">Parol:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit" class="btn-block">Kirish</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        const form = document.querySelector('form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.querySelector('#username').value;
+            const password = document.querySelector('#password').value;
+            if (username === 'Baxtiyor' && password === 'Baxtiyor') {
+                window.location.href = '{% url "home" %}';
+            } else {
+                alert('Invalid username or password');
+            }
+        });
+    </script>
+</body>
+</html>

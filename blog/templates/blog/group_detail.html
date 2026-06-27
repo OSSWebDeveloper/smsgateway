@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ group.name }} — Musoyev School</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+    <style>
+        /* ── Section header ───────────────────────────────────────── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .section-header h3 {
+            margin: 0;
+        }
+
+        .add-student-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #2f5d3a;
+            color: #fff;
+            padding: 7px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: background 0.15s;
+        }
+
+        .add-student-btn:hover {
+            background: #244a2d;
+        }
+
+        /* ── Attendance row tweaks ────────────────────────────────── */
+        .attendance-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .attendance-info {
+            flex: 1 1 160px;
+            min-width: 0;
+        }
+
+        .attendance-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* ── Remove button ────────────────────────────────────────── */
+        .remove-btn {
+            background: transparent;
+            color: #9e3a3a;
+            border: 1.5px solid #9e3a3a;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+        }
+
+        .remove-btn:hover {
+            background: #9e3a3a;
+            color: #fff;
+        }
+
+        /* ── Divider between remove and status buttons ────────────── */
+        .btn-divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.15);
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{% url 'home' %}">Musoyev School</a>
+            <ul>
+                <li><a href="{% url 'groups' %}">Guruhlar</a></li>
+                <li><a href="{% url 'students' %}">Talabalar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h1>{{ group.name }}</h1>
+            <div class="group-meta">
+                <span class="badge">{{ group.start_time }}</span>
+                <span class="badge-sep">–</span>
+                <span class="badge">{{ group.ent_time }}</span>
+            </div>
+
+            <div class="section-header">
+                <h3>Talabalar</h3>
+                <a href="{% url 'student_create' %}?group={{ group.id }}" class="add-student-btn">
+                    + Yangi talaba qo'shish
+                </a>
+            </div>
+
+            {% if students %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="success-message">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form id="attendance-form" method="post">
+                    {% csrf_token %}
+                    <ul class="row-list">
+                        {% for student in students %}
+                            <li class="row-card attendance-row" data-student-id="{{ student.id }}">
+
+                                <div class="attendance-info">
+                                    <a href="{% url 'student_assessment' student.id %}">{{ student.name }}</a>
+                                    <span class="row-card-meta">{{ student.parent_name }} · {{ student.parent_phone }}</span>
+                                </div>
+
+                                <div class="attendance-actions">
+                                    <!-- Remove button — triggers its own separate form -->
+                                    <button
+                                        type="submit"
+                                        form="remove-form-{{ student.id }}"
+                                        class="remove-btn"
+                                        onclick="return confirm('{{ student.name }}ni guruhdan o\'chirishni tasdiqlaysizmi?');">
+                                        O'chirish
+                                    </button>
+
+                                    <span class="btn-divider"></span>
+
+                                    <button type="button" class="status-btn status-absent" data-status="absent"> kelmadi</button>
+                                    <button type="button" class="status-btn status-late"   data-status="late">Kechikdi</button>
+                                    <button type="button" class="status-btn status-present" data-status="present">Keldi</button>
+                                    <input type="hidden" name="status_{{ student.id }}" value="">
+                                </div>
+
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn" id="submit-btn">Tasdiqlash</button>
+                        <button type="submit" name="lesson_end" value="1" class="lesson-end-btn">Dars tugadi</button>
+                    </div>
+                </form>
+
+                <!-- One hidden remove-form per student, outside attendance-form -->
+                {% for student in students %}
+                    <form
+                        id="remove-form-{{ student.id }}"
+                        method="post"
+                        action="{% url 'student_remove' student.id %}"
+                        style="display:none;">
+                        {% csrf_token %}
+                    </form>
+                {% endfor %}
+
+            {% else %}
+                <p class="empty-state">Bu guruhda hali talaba yo'q.
+                    <a href="{% url 'student_create' %}?group={{ group.id }}">Talaba qo'shish →</a>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('attendance-form');
+
+            // Attendance map from server: { studentId: 'absent'|'late'|'present' }
+            const attendanceMap = {{ attendance_map|safe }};
+
+            // Pre-populate existing attendance selections
+            Object.entries(attendanceMap).forEach(([studentId, status]) => {
+                const li = document.querySelector(`li[data-student-id="${studentId}"]`);
+                if (!li) return;
+                const btn = li.querySelector(`button[data-status="${status}"]`);
+                if (btn) btn.classList.add('selected');
+                const hidden = form.querySelector(`input[name="status_${studentId}"]`);
+                if (hidden) hidden.value = status;
+            });
+
+            // Status button click handling
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const li = this.closest('li');
+                    const studentId = li.dataset.studentId;
+
+                    li.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+
+                    const hidden = form.querySelector(`input[name="status_${studentId}"]`);
+                    if (hidden) hidden.value = this.dataset.status;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

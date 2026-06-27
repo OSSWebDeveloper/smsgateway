@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Sozlamalari</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+    <style>
+        /* page-specific only — everything else from style.css */
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 28px;
+        }
+        @media (max-width: 680px) {
+            .config-grid { grid-template-columns: 1fr; }
+        }
+
+        /* override max-width cap on inputs inside config cards */
+        .config-card input[type="text"],
+        .config-card input[type="password"],
+        .config-card input[type="tel"] {
+            max-width: 100%;
+        }
+
+        .field-hint {
+            font-size: .78rem;
+            color: var(--ink-soft);
+            margin-top: 4px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* test result banner */
+        #test-result {
+            display: none;
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: .88rem;
+            font-weight: 600;
+            border-left: 4px solid var(--brand);
+            background: #EFF3EE;
+            color: var(--ink);
+        }
+        #test-result.ok {
+            border-left-color: var(--success);
+            background: var(--success-bg);
+            color: var(--success-ink);
+        }
+        #test-result.err {
+            border-left-color: var(--danger);
+            background: var(--danger-bg);
+            color: var(--danger-ink);
+        }
+        #test-result.loading {
+            border-left-color: var(--warning);
+            background: #FEF6E7;
+            color: #7A5A1B;
+        }
+
+        /* connection status dot */
+        .status-dot {
+            display: inline-block;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            margin-left: 10px;
+            vertical-align: middle;
+            position: relative;
+            top: -2px;
+            transition: background .3s;
+        }
+        .status-dot.online  {
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(47, 158, 88, .2);
+        }
+        .status-dot.offline {
+            background: var(--danger);
+            box-shadow: 0 0 0 3px rgba(209, 72, 61, .2);
+        }
+
+        /* info box */
+        .info-box {
+            background: var(--chalk-soft);
+            border: 1px solid var(--chalk);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: .84rem;
+            color: var(--brand-dark);
+            line-height: 1.65;
+        }
+        .info-box strong {
+            display: block;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 8px;
+            color: var(--brand);
+        }
+        .info-box ol {
+            margin: 0;
+            padding-left: 18px;
+        }
+        .info-box li { margin-bottom: 4px; }
+
+        /* section eyebrow label above card */
+        .card-eyebrow {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin: 0 0 6px;
+        }
+
+        .btn-test {
+            background: var(--success);
+        }
+        .btn-test:hover { background: #247A43; }
+
+        /* APK download button */
+        .btn-apk-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 10px 16px;
+            background: var(--brand);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: .85rem;
+            font-weight: 600;
+            transition: background .18s, box-shadow .18s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.12);
+        }
+        .btn-apk-download:hover {
+            background: var(--brand-dark);
+            box-shadow: 0 3px 8px rgba(0,0,0,.16);
+        }
+        .apk-badge {
+            background: rgba(255,255,255,.22);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: .74rem;
+            font-weight: 500;
+            letter-spacing: .03em;
+        }
+
+        /* mono value display for current saved URL */
+        .current-url {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: .82rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: var(--ink-soft);
+            margin-bottom: 16px;
+            word-break: break-all;
+        }
+        .current-url span {
+            color: var(--ink-soft);
+            font-size: .74rem;
+            font-family: 'Inter', sans-serif;
+            display: block;
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{% url 'home' %}">Musoyev School</a>
+            <ul>
+                <li><a href="{% url 'groups' %}">Guruhlar</a></li>
+                <li><a href="{% url 'students' %}">Talabalar</a></li>
+                <li><a href="{% url 'sms_config' %}">SMS Sozlama</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="toolbar">
+            <div>
+                <h1>
+                    SMS Sozlamalari
+                    <span class="status-dot" id="gateway-dot" title="Gateway holati"></span>
+                </h1>
+                <p style="color:var(--ink-soft); font-size:.88rem; margin:0;">
+                    Android telefonidagi SMSGate ilovasi bilan ulanish
+                </p>
+            </div>
+        </div>
+
+        <div class="config-grid">
+
+            <!-- ── LEFT: Save settings ── -->
+            <div>
+                <p class="card-eyebrow">Gateway ulanishi</p>
+                <div class="card config-card">
+
+                    {% if config.gateway_url %}
+                    <div class="current-url">
+                        <span>Hozirgi manzil</span>
+                        {{ config.gateway_url }}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'sms_config' %}">
+                        {% csrf_token %}
+
+                        <label for="gateway_url">Local manzil (IP : port)</label>
+                        <input
+                            type="text"
+                            id="gateway_url"
+                            name="gateway_url"
+                            value="{{ config.gateway_url }}"
+                            placeholder="http://192.168.1.10:8080"
+                            required
+                        >
+                        <p class="field-hint">Telefondagi SMSGate → Local Server ekranidagi manzil</p>
+
+                        <label for="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            value="{{ config.username }}"
+                            placeholder="sms"
+                            required
+                        >
+
+                        <label for="password">Password</label>
+                        <input
+                            type="text"
+                            id="password"
+                            name="password"
+                            value="{{ config.password }}"
+                            placeholder="••••••••"
+                            required
+                        >
+                        <p class="field-hint">Ilovaning Local Server sahifasida ko'rsatilgan parol</p>
+
+                        <div class="form-actions">
+                            <button type="submit">💾 Saqlash</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ── RIGHT: Test + Help ── -->
+            <div style="display:flex; flex-direction:column; gap:20px;">
+
+                <div>
+                    <p class="card-eyebrow">Test SMS</p>
+                    <div class="card config-card">
+                        <label for="test-phone">Telefon raqami</label>
+                        <input
+                            type="tel"
+                            id="test-phone"
+                            placeholder="+998901234567"
+                        >
+                        <p class="field-hint">To'liq format: +998XXXXXXXXX</p>
+
+                        <label for="test-message">Xabar matni</label>
+                        <input
+                            type="text"
+                            id="test-message"
+                            value="Musoyev School: SMS Gateway ishlayapti "
+                        >
+
+                        <div class="form-actions">
+                            <button class="btn-test" id="send-btn" onclick="sendTestSms()">
+                                📨 Yuborish
+                            </button>
+                        </div>
+
+                        <div id="test-result"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="card-eyebrow">APK file</p>
+                    <div class="card">
+                        
+                        <a href="{% url 'download_apk' %}" class="btn-apk-download">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            APK yuklab olish
+                            <span class="apk-badge">SMS Gateway</span>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+    async function sendTestSms() {
+        const phone   = document.getElementById('test-phone').value.trim();
+        const message = document.getElementById('test-message').value.trim();
+        const result  = document.getElementById('test-result');
+        const btn     = document.getElementById('send-btn');
+
+        if (!phone) {
+            show('err', '⚠️ Telefon raqamini kiriting.');
+            return;
+        }
+
+        btn.disabled = true;
+        show('loading', '⏳ Yuborilmoqda…');
+
+        try {
+            const resp = await fetch("{% url 'sms_test' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ phone, message }),
+            });
+
+            const data = await resp.json();
+
+            if (resp.ok && data.ok) {
+                show('ok', ' SMS muvaffaqiyatli yuborildi! Telefonda tekshiring.');
+                setDot(true);
+            } else {
+                show('err', ' Xato: ' + (data.error || 'Gateway javob bermadi'));
+                setDot(false);
+            }
+        } catch (e) {
+            show('err', ' So\'rov amalga oshmadi: ' + e.message);
+            setDot(false);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function show(type, text) {
+        const el = document.getElementById('test-result');
+        el.className = type;
+        el.textContent = text;
+        el.style.display = 'block';
+    }
+
+    function setDot(online) {
+        document.getElementById('gateway-dot').className =
+            'status-dot ' + (online ? 'online' : 'offline');
+    }
+
+    function getCookie(name) {
+        const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return v ? v.pop() : '';
+    }
+    </script>
+
+</body>
+</html>

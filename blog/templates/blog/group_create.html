@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yangi guruh qo'shish</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{% url 'home' %}">Musoyev School</a>
+            <ul>
+                <li><a href="{% url 'groups' %}">Guruhlar</a></li>
+                <li><a href="{% url 'students' %}">Talabalar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Yangi guruh qo'shish</h1>
+
+        <div class="card form-card">
+            <form method="post">
+                {% csrf_token %}
+                <label for="name">Guruh nomi:</label>
+                <input type="text" id="name" name="name" required>
+
+                <label for="start_time">Boshlanish vaqti:</label>
+                <input type="time" id="start_time" name="start_time" required>
+
+                <label for="ent_time">Tugash vaqti:</label>
+                <input type="time" id="ent_time" name="ent_time" required>
+
+                <div class="form-actions">
+                    <button type="submit">Qo'shish</button>
+                    <button type="button" class="btn-ghost" onclick="window.location.href='{% url 'groups' %}'">Bekor qilish</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- alerts that disappear after 3 seconds -->
+        {% if messages %}
+            <ul id="message-list">
+                {% for message in messages %}
+                    <li class="alert-message">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            <script>
+                window.addEventListener('DOMContentLoaded', function() {
+                    const alerts = document.querySelectorAll('.alert-message');
+                    if (alerts.length) {
+                        setTimeout(function() {
+                            alerts.forEach(function(alert) {
+                                alert.remove();
+                            });
+                        }, 3000);
+                    }
+                });
+            </script>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talabalar</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{% url 'home' %}">Musoyev School</a>
+            <ul>
+                <li><a href="{% url 'groups' %}">Guruhlar</a></li>
+                <li><a href="{% url 'students' %}">Talabalar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="toolbar">
+            <h1>Talabalar ro'yxati</h1>
+            <button><a href="{% url 'student_create' %}">+ Yangi talaba</a></button>
+        </div>
+
+        {% if students %}
+            <div class="card table-card">
+                <table class="students-table">
+                    <thead>
+                        <tr>
+                            <th>Ism</th>
+                            <th>Guruh</th>
+                            <th>Ota-ona</th>
+                            <th>Telefon</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                            <tr>
+                                <td>{{ student.name }}</td>
+                                <td><a href="{% url 'group_detail' student.group.id %}">{{ student.group.name }}</a></td>
+                                <td>{{ student.parent_name }}</td>
+                                <td>{{ student.parent_phone }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">Hozircha ro'yxatda talaba yo'q.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

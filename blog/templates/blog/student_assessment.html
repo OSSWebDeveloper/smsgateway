@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baholash</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+    <style>
+        .back-btn {
+            display: inline-block;
+            padding: 7px 14px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: background 0.15s;
+        }
+        .assessment-layout {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 680px) {
+            .assessment-layout { grid-template-columns: 1fr; }
+        }
+
+        .student-list-card {
+            position: sticky;
+            top: 20px;
+        }
+
+        .student-list-card h3 {
+            margin: 0 0 14px;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--ink-soft);
+        }
+
+        .student-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .student-list a {
+            display: block;
+            padding: 9px 13px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: .9rem;
+            color: var(--ink);
+            border: 1.5px solid transparent;
+            transition: background .15s, border-color .15s;
+        }
+
+        .student-list a:hover {
+            background: var(--bg);
+            border-color: var(--border);
+        }
+
+        .student-list a.active {
+            background: var(--chalk-soft);
+            border-color: var(--chalk);
+            color: var(--brand-dark);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{% url 'home' %}">Musoyev School</a>
+            <ul>
+                <li><a href="{% url 'groups' %}">Guruhlar</a></li>
+                <li><a href="{% url 'students' %}">Talabalar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Baholash: {{ student.name }}</h1>
+
+        {% if messages %}
+            <div class="messages">
+                {% for m in messages %}
+                    <div class="message {{ m.tags }}">{{ m }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="assessment-layout">
+
+            <!-- LEFT: assessment form -->
+            <div class="card form-card" style="max-width: 100%;">
+                <form method="post">
+                    {% csrf_token %}
+                    <div>
+                        <h3>Akademik ko'rsatkich</h3>
+                        <div class="rating">
+                            {% for i in points %}
+                                <label><input type="radio" name="academic" value="{{ i }}"> {{ i }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Uy vazifasi</h3>
+                        <div class="rating">
+                            {% for i in points %}
+                                <label><input type="radio" name="homework" value="{{ i }}"> {{ i }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Darsni tushunishi</h3>
+                        <div class="rating">
+                            {% for i in points %}
+                                <label><input type="radio" name="understanding" value="{{ i }}"> {{ i }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit">Yuborish</button>
+                        <!-- the button of "orqaga qaytish" need to send teacher in exact group -->
+                        <!-- repair css -->
+                        <a href="{% url 'group_detail' student.group.id %}" class="back-btn">Orqaga qaytish</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- RIGHT: group students list -->
+            <div class="card student-list-card">
+                <h3>{{ student.group.name }}</h3>
+                <ul class="student-list">
+                    {% for s in group_students %}
+                        <li>
+                            <a href="{% url 'student_assessment' s.id %}"
+                               class="{% if s.id == student.id %}active{% endif %}">
+                                {{ s.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

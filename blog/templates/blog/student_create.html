@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yangi student qo'shish</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'blog/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{% url 'home' %}">Musoyev School</a>
+            <ul>
+                <li><a href="{% url 'groups' %}">Guruhlar</a></li>
+                <li><a href="{% url 'students' %}">Talabalar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Yangi student qo'shish</h1>
+
+        <div class="card form-card">
+            <form method="post">
+                {% csrf_token %}
+                <label for="name">Ism:</label>
+                <input type="text" id="name" name="name" required>
+
+                <label for="parent_name">Ota-onasining ismi:</label>
+                <input type="text" id="parent_name" name="parent_name" required>
+
+                <label for="parent_phone">Ota-onasining raqami:</label>
+                <input type="text" id="parent_phone" name="parent_phone" required>
+
+                <label for="group">Guruh:</label>
+                <select id="group" name="group" required>
+                    <option value="">Guruh tanlang</option>
+                    {% for group in groups %}
+                        <option value="{{ group.id }}">{{ group.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <div class="form-actions">
+                    <button type="submit">Qo'shish</button>
+                    <button type="button" class="btn-ghost" onclick="window.location.href='{% url 'students' %}'">Bekor qilish</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- notifications that disappear after 3 seconds -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <script>
+        // Remove messages after 3 seconds
+        setTimeout(function() {
+            var messages = document.querySelector('.messages');
+            if (messages) {
+                messages.style.display = 'none';
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
